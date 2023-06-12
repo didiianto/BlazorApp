@@ -1,0 +1,174 @@
+﻿@page "/event-registration"
+@page "/event-registration/edit/{Id}"
+@using System.Collections.Generic
+@using System.ComponentModel.DataAnnotations
+@using BlazorApp.Data
+@using BlazorApp.Services
+@inject IEventRegistration eventRegistration
+@inject NavigationManager NavigationManager
+@inject IRepository<Data.EventRegistration> GEventRegistration
+
+<h3>Event Registration</h3>
+
+@if (RegistrationSuccessful)
+{
+    <p>Registration successful! You are now registered for the event.</p>
+}
+else
+{
+    <EditForm Model="registrationModel" OnValidSubmit="RegisterForEvent">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="fullName">Full Name</label>
+            <InputText id="fullName" class="form-control" @bind-Value="registrationModel.FullName" />
+            <ValidationMessage For="@(() => registrationModel.FullName)" />
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <InputText id="email" class="form-control" @bind-Value="registrationModel.Email" />
+            <ValidationMessage For="@(() => registrationModel.Email)" />
+        </div>
+        <div class="form-group">
+            <label for="address">Address</label>
+            <InputText id="address" class="form-control" @bind-Value="registrationModel.Address" />
+        </div>
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="genderMale" value="Male" checked="@IsGenderMale" @onchange="SetGender" />
+                <label class="form-check-label" for="genderMale">Male</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="genderFemale" value="Female" checked="@IsGenderFemale" @onchange="SetGender" />
+                <label class="form-check-label" for="genderFemale">Female</label>
+            </div>
+            <ValidationMessage For="@(() => registrationModel.Gender)" />
+        </div>
+        <div class="form-group">
+            <label for="country">Country</label>
+            <select id="country" class="form-control" @bind="registrationModel.Country">
+                <option value="">Select Country</option>
+                @foreach (var country in countries)
+                {
+                    <option value="@country">@country</option>
+                }
+            </select>
+            <ValidationMessage For="@(() => registrationModel.Country)" />
+        </div>
+       @* <div class="form-group">
+            <label for="interests">Interests</label>
+            <div class="form-check">
+                @foreach (var interest in interests)
+                {
+                    <div>
+                        <input class="form-check-input" type="checkbox" id="interest-@interest" value="@interest" />
+                        <label class="form-check-label" for="interest-@interest">@interest</label>
+                    </div>
+                }
+            </div>
+            <ValidationMessage For="@(() => registrationModel.Interests)" />
+        </div>*@
+        <br>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (!Guid.TryParse(Id, out Guid idGuid))
+        {
+            // Handle invalid input
+            // Redirect to an error page or display an error message
+        }
+        else
+        {
+            // Use the idGuid as a valid Guid value
+            // Perform necessary logic
+        }
+
+        if (Id != null)
+        {
+            registrationModel = eventRegistration.FindById(new Guid(Id));
+        }
+        base.OnInitialized();
+    }
+
+    Data.EventRegistration registrationModel = new Data.EventRegistration();
+    private bool RegistrationSuccessful { get; set; }
+
+    private bool IsGenderMale
+    {
+        get => registrationModel.Gender == "Male";
+        set => registrationModel.Gender = value ? "Male" : registrationModel.Gender;
+    }
+
+    private bool IsGenderFemale
+    {
+        get => registrationModel.Gender == "Female";
+        set => registrationModel.Gender = value ? "Female" : registrationModel.Gender;
+    }
+
+    private void SetGender(ChangeEventArgs e)
+    {
+        registrationModel.Gender = e.Value.ToString();
+    }
+
+    //private void ToggleInterest(ChangeEventArgs e)
+    //{
+    //    var interest = e.Value.ToString();
+    //    if (registrationModel.Interests.Contains(interest))
+    //    {
+    //        registrationModel.Interests.Remove(interest);
+    //    }
+    //    else
+    //    {
+    //        registrationModel.Interests.Add(interest);
+    //    }
+    //}
+
+    private List<string> countries = new List<string> { "USA", "Canada", "UK", "Australia" };
+    private List<string> interests = new List<string> { "Sports", "Music", "Reading", "Travel" };
+
+
+    //private class RegistrationModel
+    //{
+    //    [Required(ErrorMessage = "Full Name is required.")]
+    //    public string? FullName { get; set; }
+
+    //    [Required(ErrorMessage = "Email is required.")]
+    //    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    //    public string? Email { get; set; }
+    //    [Required(ErrorMessage = "Address is required.")]
+    //    public string? Address { get; set; }
+
+    //    [Required(ErrorMessage = "Gender is required.")]
+    //    public string? Gender { get; set; }
+
+    //    [Required(ErrorMessage = "Country is required.")]
+    //    public string? Country { get; set; }
+
+    //    [Required(ErrorMessage = "At least one interest must be selected.")]
+    //    public List<string>? Interests { get; set; } = new List<string>();
+    //}
+
+    private async Task RegisterForEvent(EditContext editContext)
+    {
+        var register = (Data.EventRegistration)editContext.Model;
+        //eventRegistration.AddUpdateEventRegistration(register);
+
+        //unitOfWork.EventRegistrationRepository().Insert(register);
+        //unitOfWork.Save();
+
+        await GEventRegistration.AddAsync(register);
+
+
+        RegistrationSuccessful = true;
+        NavigationManager.NavigateTo("/event-registrationList", true);
+    }
+}

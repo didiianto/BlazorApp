@@ -1,0 +1,60 @@
+﻿@page "/event-registrationList"
+@using Services
+@inject IEventRegistration eventRegistrationService
+@using BlazorApp.XLS
+@inject IJSRuntime js
+
+<h3>Event RegistrationList</h3>
+<button type="button" class="btn btn-success" @onclick="@ClickExportXLS">Create XLSX</button>
+<div class="row">
+    <div class="col-md">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Address</th>
+                    <th>Gender</th>
+                    <th>Country</th>
+                    <th>Interest</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var reg in registrations)
+                {
+                    <tr>
+                        <td>@reg.FullName</td>
+                        <td>@reg.Email</td>
+                        <td>@reg.Address</td>
+                        <td>@reg.Gender</td>
+                        <td>@reg.Country</td>
+                        <td>@reg.Interests</td>
+                        <td>
+                            <a href="/event-registration/edit/@reg.Id" class="btn btn-success">Edit</a>
+                            <a href="" class="btn btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        
+    </div>
+    <br />
+    
+</div>
+
+@code {
+    private List<Data.EventRegistration> registrations = new();
+    protected override void OnInitialized()
+    {
+        registrations = eventRegistrationService.GetAllEventRegistration();
+        base.OnInitialized();
+    }
+
+    private async void ClickExportXLS()
+    {
+        var xls = new Excel();
+        await xls.GenerateEventRegistrationAsync(js, registrations, "Report.xlsx");
+    }
+}
